@@ -10,12 +10,18 @@ from app.models.user import User
 credentials = HTTPBearer()
 
 
-def get_current_user(
-    db: Session = Depends(get_db),
+def get_token_claims(
     credentials: HTTPAuthorizationCredentials = Depends(credentials),
 ):
     token = credentials.credentials
     claims = security.parse_token(token=token)
+    return claims
+
+
+def get_current_user(
+    db: Session = Depends(get_db),
+    claims: dict = Depends(get_token_claims),
+):
     user_id = claims.get("sub")
     user = db.get(User, user_id)
 

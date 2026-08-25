@@ -30,7 +30,7 @@ def list_users(
     keyword: str | None = None,
     is_active: bool | None = None,
     db: Session = Depends(get_db),
-    _: User = Depends(RequireRole(["admin"])),
+    _: dict = Depends(RequireRole(["admin"])),
 ):
     users = user_service.list_users(db, keyword, is_active)
     return APIResponse(

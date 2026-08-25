@@ -120,9 +120,9 @@ def delete_project_member(
     "/{project_id}/members", response_model=APIResponse[list[ProjectMemberResponse]]
 )
 def list_member(
-    project_id: int, db: Session = Depends(get_db), _: User = Depends(require_owner)
+    project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-    members = project_service.list_member(project_id, db)
+    members = project_service.list_member(current_user.id,project_id, db)
     return APIResponse(
         statusCode=status.HTTP_200_OK,
         data=members,

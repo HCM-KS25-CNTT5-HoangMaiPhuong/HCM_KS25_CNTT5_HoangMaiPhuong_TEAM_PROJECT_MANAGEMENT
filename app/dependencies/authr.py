@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exception import ForbiddenException
 from app.db.database import get_db
-from app.dependencies.authn import get_current_user
+from app.dependencies.authn import get_current_user, get_token_claims
 from app.models.project_member import ProjectMember, ProjectMemberRole
 from app.models.user import User
 
@@ -15,12 +15,12 @@ class RequireRole:
     def __init__(self, allowed_role: list[str]) -> None:
         self.allowed_role = allowed_role
 
-    def __call__(self, current_user: User = Depends(get_current_user)) -> Any:
-        if current_user.role not in self.allowed_role:
+    def __call__(self, claims: dict = Depends(get_token_claims)) -> Any:
+        if claims.get("role") not in self.allowed_role:
             raise ForbiddenException(
                 message="Bạn không có quyền thực hiện thao tác này"
             )
-        return current_user
+        return claims
 
 
 def require_owner(

@@ -1,8 +1,7 @@
-from fastapi import Depends
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.exception import BadRequestException, NotFoundException
+from app.core.exception import BadRequestException, NotFoundException, ForbiddenException
 from app.db.database import get_db
 from app.models.project import Project
 from app.models.project_member import ProjectMember, ProjectMemberRole
@@ -37,8 +36,6 @@ def get_projects(user_id: int, db: Session, name: str | None = None):
         .where(ProjectMember.user_id == user_id)
     )
     if name is not None:
-        print(name)
-
         stmt = stmt.where(Project.name.ilike(f"%{name}%"))
 
     projects = db.scalars(stmt)
@@ -85,6 +82,9 @@ def delete_project(project_id: int, db: Session):
 
 
 def add_project_member(project_id: int, member_id: int, db: Session):
+    member = db.scalar(select(User).where(User.id == member_id))
+    if not member:
+        raise BadRequestException("Nguời dùng không tồn tại")
     member_exists = db.scalar(
         select(ProjectMember).where(
             ProjectMember.project_id == project_id, ProjectMember.user_id == member_id
@@ -92,9 +92,7 @@ def add_project_member(project_id: int, member_id: int, db: Session):
     )
     if member_exists:
         raise BadRequestException(message="Người dùng đã là thành viên của project")
-    member = db.scalar(select(User).where(User.id == member_id))
-    if not member:
-        raise BadRequestException("Nguời dùng không tồn tại")
+
     new_member = ProjectMember(
         project_id=project_id,
         user_id=member_id,
@@ -118,8 +116,17 @@ def delete_project_member(project_id: int, member_id: int, db: Session):
     db.commit()
 
 
-def list_member(project_id: int, db: Session):
+def list_member(user_id: int, project_id: int, db: Session):
+    is_member = db.scalar(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project_id, ProjectMember.user_id == user_id
+        )
+    )
+    if not is_member:
+        raise ForbiddenException(message="Bạn không có quyền xem danh sách thành viên của project này.")
+
     members = db.scalars(
         select(ProjectMember).where(ProjectMember.project_id == project_id)
     )
+    
     return members
