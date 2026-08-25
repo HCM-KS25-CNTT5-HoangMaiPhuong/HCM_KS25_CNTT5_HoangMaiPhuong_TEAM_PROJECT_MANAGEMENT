@@ -33,8 +33,8 @@ def create_project(user_id: int, body: ProjectCreate, db: Session):
 def get_projects(user_id: int, db: Session, name: str | None = None):
     stmt = (
         select(Project)
-        .outerjoin(ProjectMember, Project.id == ProjectMember.project_id)
-        .where(or_(Project.owner_id == user_id, ProjectMember.user_id == user_id))
+        .join(ProjectMember, Project.id == ProjectMember.project_id)
+        .where(ProjectMember.user_id == user_id)
     )
     if name is not None:
         print(name)
