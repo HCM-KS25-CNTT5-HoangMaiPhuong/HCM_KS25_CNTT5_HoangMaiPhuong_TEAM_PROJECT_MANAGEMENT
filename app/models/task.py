@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -32,8 +32,12 @@ class Task(Base):
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
-    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), nullable=False)
+    assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"),nullable=True)
+    status: Mapped[TaskStatus] = mapped_column(
+        Enum(TaskStatus),
+        nullable=False,
+        server_default=text(f"{TaskStatus.IN_PROGRESS.value}"),
+    )
     priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority), nullable=False)
     due_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=False), nullable=True

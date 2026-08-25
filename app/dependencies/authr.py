@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.exception import ForbiddenException
+from app.core.exception import ForbiddenException, NotFoundException
 from app.db.database import get_db
 from app.dependencies.authn import get_current_user, get_token_claims
 from app.models.project_member import ProjectMember, ProjectMemberRole
@@ -38,5 +38,23 @@ def require_owner(
 
     if not member:
         raise ForbiddenException("Bạn không có quyền thực hiện thao tác này")
+
+    return current_user
+
+
+def require_member(
+    project_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    member = db.scalar(
+        select(ProjectMember).where(
+            ProjectMember.project_id == project_id,
+            ProjectMember.user_id == current_user.id,
+        )
+    )
+
+    if not member:
+        raise NotFoundException(message="Không tìm thấy project")
 
     return current_user

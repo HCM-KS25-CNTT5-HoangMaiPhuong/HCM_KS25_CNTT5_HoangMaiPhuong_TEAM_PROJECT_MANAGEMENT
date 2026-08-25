@@ -6,11 +6,13 @@ from sqlalchemy.orm import Session
 from app.core.response import APIResponse
 from app.db.database import get_db
 from app.dependencies.authn import get_current_user
-from app.dependencies.authr import require_owner
+from app.dependencies.authr import require_member, require_owner
 from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.schemas.project_member import ProjectMemberCreate, ProjectMemberResponse
-from app.services import project_service
+from app.models.task import TaskPriority, TaskStatus
+from app.schemas.task import TaskCreate, TaskPriority, TaskResponse, TaskStatus
+from app.services import project_service, task_service
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -88,7 +90,11 @@ def delete_project(
     )
 
 
-@router.post("/{project_id}/members", response_model=APIResponse[None],status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{project_id}/members",
+    response_model=APIResponse[None],
+    status_code=status.HTTP_201_CREATED,
+)
 def add_project_member(
     project_id: int,
     body: ProjectMemberCreate,
@@ -120,11 +126,54 @@ def delete_project_member(
     "/{project_id}/members", response_model=APIResponse[list[ProjectMemberResponse]]
 )
 def list_member(
-    project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    members = project_service.list_member(current_user.id,project_id, db)
+    members = project_service.list_member(current_user.id, project_id, db)
     return APIResponse(
         statusCode=status.HTTP_200_OK,
         data=members,
         message="Lấy danh sách thành viên của project thành công",
+    )
+
+
+@router.post(
+    "/{project_id}/tasks",
+    response_model=APIResponse[TaskResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+def create_tasks(
+    project_id: int,
+    body: TaskCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_owner),
+):
+    task = task_service.create_task(project_id, body, db)
+    return APIResponse(
+        statusCode=status.HTTP_201_CREATED, message="Đã tạo task", data=task
+    )
+
+
+@router.get("/{project_id}/tasks", response_model=APIResponse[list[TaskResponse]])
+def list_tasks(
+    project_id: int,
+    task_status: TaskStatus | None = None,
+    priority: TaskPriority | None = None,
+    assignee: int | None = None,
+    title: str | None = None,
+    limit: int = 10,
+    offset: int = 0,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    db: Session = Depends(get_db),
+    _: User = Depends(require_member),
+):
+    tasks = task_service.list_tasks(
+        project_id, db, task_status, priority, assignee, title, limit, offset, sort_by, sort_order
+    )
+    return APIResponse(
+        statusCode=status.HTTP_200_OK,
+        message="Đã lấy danh sách task thành công",
+        data=tasks,
     )
