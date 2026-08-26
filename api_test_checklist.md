@@ -35,7 +35,7 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
     "full_name": "Người dùng Mới"
   }
   ```
-- [ ] **Case lỗi (400 Bad Request):** Đăng ký với email đã tồn tại (vd: `admin@example.com`).
+- [ ] **Case lỗi (409 Conflict):** Đăng ký với email đã tồn tại (vd: `admin@example.com`).
   ```json
   {
     "email": "admin@example.com",
@@ -66,7 +66,7 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
     "password": "wrongpass"
   }
   ```
-- [ ] **Case lỗi (404/401):** Email không tồn tại (`notexist@example.com`).
+- [ ] **Case lỗi (401 Unauthorized):** Email không tồn tại (`notexist@example.com`).
   ```json
   {
     "email": "notexist@example.com",
@@ -197,7 +197,7 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 5.3 GET `/tasks/{task_id}` (Chi tiết Task)
 - [ ] **Case đúng (200 OK):** GET `/tasks/1`.
-- [ ] **Case lỗi (403/404):** `user3` (không thuộc project 1) GET `/tasks/1`.
+- [ ] **Case lỗi (403 Forbidden):** `user3` (không thuộc project 1) GET `/tasks/1`.
 
 ### 5.4 PATCH `/tasks/{task_id}` (Cập nhật Task & Phân công)
 - [ ] **Case đúng (200 OK):** Token `admin@example.com` (Owner), PATCH `/tasks/1` (Vừa sửa trạng thái vừa chuyển người thực hiện):
