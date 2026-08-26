@@ -1,13 +1,13 @@
-from venv import create
-
+from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from fastapi import status
+
 from app.core import security
 from app.core.config import settings
 from app.core.exception import AppException
+from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.schemas.user import TokenResponse, UserCreate, UserLogin, UserResponse
+from app.schemas.user import TokenResponse, UserCreate, UserLogin
 
 
 def register(body: UserCreate, db: Session):
@@ -57,4 +57,40 @@ def login(body: UserLogin, db: Session):
         user_id=user.id, duration=settings.REFRESH_EXPIRES_TIME, role=str(user.role)
     )
 
+    db_refresh_token = RefreshToken(token=refresh_token, user_id=user.id)
+    db.add(db_refresh_token)
+    db.commit()
+
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+
+def refresh_token(refresh_token: str, db: Session):
+    claims = security.parse_token(refresh_token)
+    user_id = int(claims.get("sub"))
+    role = claims.get("role")
+
+    db_token = db.scalar(
+        select(RefreshToken).where(RefreshToken.token == refresh_token)
+    )
+    if not db_token:
+        raise AppException(
+            message="Token không tồn tại hoặc đã bị thu hồi",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            error="UNAUTHORIZED",
+        )
+
+    db.delete(db_token)
+    db.commit()
+
+    access_token = security.generate_token(
+        user_id=user_id, duration=settings.ACCESS_EXPIRES_TIME, role=str(role)
+    )
+    new_refresh_token = security.generate_token(
+        user_id=user_id, duration=settings.REFRESH_EXPIRES_TIME, role=str(role)
+    )
+
+    new_db_token = RefreshToken(token=new_refresh_token, user_id=user_id)
+    db.add(new_db_token)
+    db.commit()
+
+    return TokenResponse(access_token=access_token, refresh_token=new_refresh_token)

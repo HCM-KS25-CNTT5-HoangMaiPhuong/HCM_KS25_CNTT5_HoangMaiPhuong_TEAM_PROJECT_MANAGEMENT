@@ -20,7 +20,7 @@ def get_token_claims(
 
 def get_current_user(
     db: Session = Depends(get_db),
-    claims: dict = Depends(get_token_claims),
+    claims: dict[str, str] = Depends(get_token_claims),
 ):
     user_id = claims.get("sub")
     user = db.get(User, user_id)

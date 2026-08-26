@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.exception import (
     BadRequestException,
     NotFoundException,
-    ForbiddenException,
 )
-from app.db.database import get_db
 from app.models.project import Project
 from app.models.project_member import ProjectMember, ProjectMemberRole
 from app.models.user import User
@@ -37,7 +35,7 @@ def get_projects(user_id: int, db: Session, name: str | None = None):
     stmt = (
         select(Project)
         .join(ProjectMember, Project.id == ProjectMember.project_id)
-        .where(ProjectMember.user_id == user_id)
+        .where(ProjectMember.user_id == user_id, Project.is_deleted == False)
     )
     if name is not None:
         stmt = stmt.where(Project.name.ilike(f"%{name}%"))
@@ -58,8 +56,9 @@ def update_project(project: Project, body: ProjectUpdate, db: Session):
 
 
 def delete_project(project: Project, db: Session):
-    db.delete(project)
+    project.is_deleted = True
     db.commit()
+    db.refresh(project)
     return project
 
 

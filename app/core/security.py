@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta, timezone
-from fastapi import status
+from datetime import UTC, datetime, timedelta
+
 import bcrypt
 import jwt
+from fastapi import status
 
 from app.core.config import settings
 from app.core.exception import AppException
@@ -20,7 +21,7 @@ def verify_password(password: str, hashed_password: str):
 
 
 def generate_token(user_id: int, duration: int, role: str):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     claims = {
         "sub": str(user_id),
         "role": role,

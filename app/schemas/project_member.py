@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict
 
 from app.models.project_member import ProjectMemberRole

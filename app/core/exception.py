@@ -4,7 +4,6 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
-from pydantic import field_validator
 
 from app.core.response import APIResponse
 
@@ -39,6 +38,7 @@ def app_exception_handler(_: Request, exc: AppException):
         ).model_dump(),
     )
 
+
 def format_request_validation_errors(
     error: RequestValidationError,
 ) -> dict[str, str]:
@@ -48,6 +48,7 @@ def format_request_validation_errors(
         message = err["msg"]
         errors[field_name] = message
     return errors
+
 
 def validate_exception_handler(_: Request, exc: RequestValidationError):
     return JSONResponse(

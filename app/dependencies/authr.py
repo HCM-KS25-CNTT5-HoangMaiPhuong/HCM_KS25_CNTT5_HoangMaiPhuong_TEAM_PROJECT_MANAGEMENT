@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.core.exception import ForbiddenException, NotFoundException
 from app.db.database import get_db
 from app.dependencies.authn import get_current_user, get_token_claims
-from app.models.project_member import ProjectMember, ProjectMemberRole
 from app.models.project import Project
+from app.models.project_member import ProjectMember, ProjectMemberRole
 from app.models.user import User
 
 
@@ -16,7 +16,7 @@ class RequireRole:
     def __init__(self, allowed_role: list[str]) -> None:
         self.allowed_role = allowed_role
 
-    def __call__(self, claims: dict = Depends(get_token_claims)) -> Any:
+    def __call__(self, claims: dict[str, str] = Depends(get_token_claims)) -> Any:
         if claims.get("role") not in self.allowed_role:
             raise ForbiddenException(
                 message="Bạn không có quyền thực hiện thao tác này"
@@ -36,13 +36,13 @@ def require_owner(
             (ProjectMember.project_id == Project.id)
             & (ProjectMember.user_id == current_user.id),
         )
-        .where(Project.id == project_id)
+        .where(Project.id == project_id, Project.is_deleted == False)
     )
     result = db.execute(stmt).first()
 
     if not result:
         raise NotFoundException("Project không tồn tại")
-        
+
     project, member = result
 
     if not member or member.role != ProjectMemberRole.OWNER.value:
@@ -63,13 +63,13 @@ def require_member(
             (ProjectMember.project_id == Project.id)
             & (ProjectMember.user_id == current_user.id),
         )
-        .where(Project.id == project_id)
+        .where(Project.id == project_id, Project.is_deleted == False)
     )
     result = db.execute(stmt).first()
 
     if not result:
         raise NotFoundException("Project không tồn tại")
-        
+
     project, member = result
 
     if not member:

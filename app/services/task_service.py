@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.exception import (
     BadRequestException,
-    NotFoundException,
     ForbiddenException,
+    NotFoundException,
 )
 from app.models import ProjectMember, Task
 from app.models.project_member import ProjectMemberRole
@@ -13,15 +13,7 @@ from app.schemas.task import AssignTask, TaskCreate, TaskUpdate
 
 
 def create_task(project_id: int, body: TaskCreate, db: Session):
-    # if body.assignee_id:
-    #     assignee = db.scalar(
-    #         select(ProjectMember).where(
-    #             ProjectMember.project_id == project_id,
-    #             ProjectMember.user_id == body.assignee_id,
-    #         )
-    #     )
-    #     if not assignee:
-    #         raise BadRequestException(message="Không tồn tại thành viên")
+
     new_task = Task(**body.model_dump())
     new_task.project_id = project_id
     db.add(new_task)
@@ -145,9 +137,13 @@ def list_tasks(
         stmt = stmt.where(Task.title.ilike(f"%{title}%"))
 
     if sort_by == "due_date":
-        stmt = stmt.order_by(Task.due_date.asc() if sort_order == "asc" else Task.due_date.desc())
+        stmt = stmt.order_by(
+            Task.due_date.asc() if sort_order == "asc" else Task.due_date.desc()
+        )
     else:
-        stmt = stmt.order_by(Task.created_at.asc() if sort_order == "asc" else Task.created_at.desc())
+        stmt = stmt.order_by(
+            Task.created_at.asc() if sort_order == "asc" else Task.created_at.desc()
+        )
 
     stmt = stmt.offset(offset).limit(limit)
     tasks = db.scalars(stmt)
