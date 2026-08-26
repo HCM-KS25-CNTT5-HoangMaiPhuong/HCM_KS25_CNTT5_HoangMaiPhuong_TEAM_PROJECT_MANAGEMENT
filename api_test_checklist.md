@@ -80,12 +80,24 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 2.1 GET `/users/me` (Lấy thông tin cá nhân)
 - [ ] **Case đúng (200 OK):** Lấy token của `admin@example.com` gọi API, trả về ID 1.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
 - [ ] **Case lỗi (401 Unauthorized):** Không truyền token.
 
 ### 2.2 GET `/users` (Lấy danh sách người dùng)
 - [ ] **Case đúng (200 OK):** Dùng token của `admin@example.com` gọi API.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
 - [ ] **Case đúng (200 OK) - Có filter:** Thêm param `?keyword=admin&is_active=true`.
 - [ ] **Case lỗi (403 Forbidden):** Dùng token của `user1@example.com` (role USER).
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
 
 ---
 
@@ -93,6 +105,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 3.1 POST `/projects` (Tạo Project mới)
 - [ ] **Case đúng (201 Created):** Dùng token của `user1@example.com`:
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
   ```json
   {
     "name": "Dự án Gamma",
@@ -109,21 +125,41 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 3.2 GET `/projects` (Lấy danh sách Project)
 - [ ] **Case đúng (200 OK):** Dùng token của `user1@example.com` -> sẽ thấy Alpha và Beta.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
 - [ ] **Case đúng (200 OK) - Tìm kiếm:** Gửi query `?name=Alpha`.
 
 ### 3.3 GET `/projects/{project_id}` (Chi tiết Project)
 - [ ] **Case đúng (200 OK):** Dùng token của `admin@example.com`, GET `/projects/1`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
 - [ ] **Case lỗi (403 Forbidden):** Dùng token của `user3@example.com` (chưa vào project 1), GET `/projects/1`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user3@example.com", "password": "user123"}
+  > ```
 - [ ] **Case lỗi (404 Not Found):** GET `/projects/999`.
 
 ### 3.4 PATCH `/projects/{project_id}` (Cập nhật Project)
 - [ ] **Case đúng (200 OK):** Dùng token của `admin@example.com` (Owner), PATCH `/projects/1`:
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
   ```json
   {
     "name": "Dự án Alpha (Cập nhật)"
   }
   ```
 - [ ] **Case lỗi (403 Forbidden):** Dùng token của `user1@example.com` (Member, không phải Owner), PATCH `/projects/1`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
   ```json
   {
     "name": "Dự án Alpha (Thử cập nhật)"
@@ -132,7 +168,15 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 3.5 DELETE `/projects/{project_id}` (Xóa Project)
 - [ ] **Case đúng (200 OK):** Dùng token của `admin@example.com` (Owner), DELETE `/projects/1` (Soft delete sẽ thành công, get lại `/projects/1` sẽ ra 404).
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
 - [ ] **Case lỗi (403 Forbidden):** Dùng token của `user1@example.com` (Member), DELETE `/projects/1`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
 
 ---
 
@@ -140,6 +184,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 4.1 POST `/projects/{project_id}/members` (Thêm thành viên)
 - [ ] **Case đúng (201 Created):** Dùng token của `admin@example.com` (Owner project 1), POST `/projects/1/members`:
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
   ```json
   {
     "user_id": 4
@@ -153,6 +201,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
   }
   ```
 - [ ] **Case lỗi (403 Forbidden):** Dùng token của `user1@example.com` (Member) gọi API này.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
   ```json
   {
     "user_id": 4
@@ -161,9 +213,17 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 4.2 GET `/projects/{project_id}/members` (Danh sách thành viên)
 - [ ] **Case đúng (200 OK):** Dùng token của `user1@example.com` (Member project 1), GET `/projects/1/members`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
 
 ### 4.3 DELETE `/projects/{project_id}/members/{user_id}` (Xóa thành viên)
 - [ ] **Case đúng (200 OK):** Dùng token của `admin@example.com` (Owner project 1), DELETE `/projects/1/members/3` (Xóa user2).
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
 - [ ] **Case lỗi (400 Bad Request):** `admin` tự xóa chính mình: DELETE `/projects/1/members/1`.
 - [ ] **Case lỗi (403 Forbidden):** `user1` (Member) tự ý đi xóa `user2`: DELETE `/projects/1/members/3`.
 
@@ -173,6 +233,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 5.1 POST `/projects/{project_id}/tasks` (Tạo Task mới)
 - [ ] **Case đúng (201 Created):** Dùng token của `admin@example.com` (Owner project 1), POST `/projects/1/tasks`:
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
   ```json
   {
     "title": "Task mới tinh",
@@ -182,6 +246,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
   }
   ```
 - [ ] **Case lỗi (403 Forbidden):** Dùng token của `user1@example.com` (Member project 1), cố tình POST tạo task.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
   ```json
   {
     "title": "Task mới tinh",
@@ -201,6 +269,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 5.4 PATCH `/tasks/{task_id}` (Cập nhật Task & Phân công)
 - [ ] **Case đúng (200 OK):** Token `admin@example.com` (Owner), PATCH `/tasks/1` (Vừa sửa trạng thái vừa chuyển người thực hiện):
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
   ```json
   {
     "status": "DONE",
@@ -215,6 +287,10 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
   }
   ```
 - [ ] **Case lỗi (403 Forbidden):** Token `user1@example.com` (Member), PATCH `/tasks/1`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
   ```json
   {
     "status": "DONE"
@@ -223,4 +299,12 @@ Checklist này bao phủ các luồng chính của ứng dụng, bao gồm cả 
 
 ### 5.5 DELETE `/tasks/{task_id}` (Xóa Task)
 - [ ] **Case đúng (200 OK):** Token `admin@example.com`, DELETE `/tasks/1`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "admin@example.com", "password": "admin123"}
+  > ```
 - [ ] **Case lỗi (403 Forbidden):** Token `user1@example.com`, DELETE `/tasks/2`.
+  > *(Đăng nhập lấy token)*
+  > ```json
+  > {"email": "user1@example.com", "password": "user123"}
+  > ```
