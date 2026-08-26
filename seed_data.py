@@ -7,7 +7,8 @@ from sqlalchemy import select
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.security import hash_password
-from app.db.database import SessionLocal
+from app.db.database import SessionLocal, engine
+from app.models.base import Base
 from app.models.project import Project
 from app.models.project_member import ProjectMember, ProjectMemberRole
 from app.models.task import Task, TaskPriority, TaskStatus
@@ -16,6 +17,10 @@ from app.models.user import User, UserRole
 
 def seed():
     print("Khởi tạo database session...")
+    print("Xóa và tạo lại các bảng trong database...")
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
 
     try:
@@ -42,6 +47,13 @@ def seed():
                 role=UserRole.USER,
                 is_active=True,
             ),
+            User(
+                email="user3@example.com",
+                password_hash=hash_password("user123"),
+                full_name="Người dùng 3 (Để test add member)",
+                role=UserRole.USER,
+                is_active=True,
+            ),
         ]
         db.add_all(users_data)
         db.commit()
@@ -49,6 +61,10 @@ def seed():
         admin = db.scalar(select(User).where(User.email == "admin@example.com"))
         user1 = db.scalar(select(User).where(User.email == "user1@example.com"))
         user2 = db.scalar(select(User).where(User.email == "user2@example.com"))
+        user3 = db.scalar(select(User).where(User.email == "user3@example.com"))
+
+        if not admin or not user1 or not user2 or not user3:
+            raise ValueError("Không tìm thấy user vừa tạo trong database")
 
         print("Đang tạo dự án (Projects)...")
         projects_data = [
@@ -68,6 +84,9 @@ def seed():
 
         project_alpha = db.scalar(select(Project).where(Project.name == "Dự án Alpha"))
         project_beta = db.scalar(select(Project).where(Project.name == "Dự án Beta"))
+
+        if not project_alpha or not project_beta:
+            raise ValueError("Không tìm thấy project vừa tạo trong database")
 
         print("Đang thêm thành viên vào dự án (Project Members)...")
         members_data = [

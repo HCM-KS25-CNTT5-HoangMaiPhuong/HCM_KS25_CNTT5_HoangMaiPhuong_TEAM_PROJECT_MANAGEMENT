@@ -9,7 +9,7 @@ from app.core.exception import (
 from app.models import ProjectMember, Task
 from app.models.project_member import ProjectMemberRole
 from app.models.task import TaskPriority, TaskStatus
-from app.schemas.task import AssignTask, TaskCreate, TaskUpdate
+from app.schemas.task import TaskCreate, TaskUpdate
 
 
 def create_task(project_id: int, body: TaskCreate, db: Session):
@@ -54,6 +54,18 @@ def update_task(task_id: int, user_id: int, body: TaskUpdate, db: Session):
     if not owner:
         raise ForbiddenException(message="Chỉ OWNER mới có quyền cập nhật task")
 
+    if body.assignee_id is not None:
+        assignee = db.scalar(
+            select(ProjectMember).where(
+                ProjectMember.project_id == task.project_id,
+                ProjectMember.user_id == body.assignee_id,
+            )
+        )
+        if not assignee:
+            raise BadRequestException(
+                message="Người được giao không phải là thành viên của project"
+            )
+
     for key, value in body.model_dump(exclude_unset=True).items():
         setattr(task, key, value)
 
@@ -79,36 +91,6 @@ def delete_task(task_id: int, user_id: int, db: Session):
     db.delete(task)
     db.commit()
 
-
-def assign_task(task_id: int, user_id: int, body: AssignTask, db: Session):
-    task = db.scalar(select(Task).where(Task.id == task_id))
-    if not task:
-        raise NotFoundException(message="Không tồn tại task này")
-
-    owner = db.scalar(
-        select(ProjectMember).where(
-            ProjectMember.project_id == task.project_id,
-            ProjectMember.user_id == user_id,
-            ProjectMember.role == ProjectMemberRole.OWNER.value,
-        )
-    )
-    if not owner:
-        raise ForbiddenException(message="Chỉ OWNER mới có quyền giao task")
-
-    assignee = db.scalar(
-        select(ProjectMember).where(
-            ProjectMember.project_id == task.project_id,
-            ProjectMember.user_id == body.assignee_id,
-        )
-    )
-    if not assignee:
-        raise BadRequestException(
-            message="Người được giao không phải là thành viên của project"
-        )
-    task.assignee_id = body.assignee_id
-    db.commit()
-    db.refresh(task)
-    return task
 
 
 def list_tasks(

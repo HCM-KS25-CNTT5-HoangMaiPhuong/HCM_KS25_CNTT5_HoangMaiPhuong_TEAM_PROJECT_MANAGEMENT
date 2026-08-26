@@ -22,9 +22,6 @@ class TaskUpdate(BaseModel):
     due_date: datetime | None = None
 
 
-class AssignTask(BaseModel):
-    assignee_id: int
-
 
 class TaskResponse(BaseModel):
     id: int
