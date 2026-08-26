@@ -7,13 +7,15 @@ from app.models.user import UserRole
 
 class UserCreate(BaseModel):
     email: EmailStr
-    full_name: str
-    password: str = Field(max_length=72)
+    full_name: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=1, max_length=72)
+
 
 class UserLogin(BaseModel):
-    email:EmailStr
-    password:str
-    
+    email: EmailStr
+    password: str
+
+
 class UserUpdate(BaseModel):
     full_name: str | None = None
     is_active: bool | None = None
@@ -30,6 +32,7 @@ class UserResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class TokenResponse(BaseModel):
-    access_token:str
-    refresh_token:str
+    access_token: str
+    refresh_token: str

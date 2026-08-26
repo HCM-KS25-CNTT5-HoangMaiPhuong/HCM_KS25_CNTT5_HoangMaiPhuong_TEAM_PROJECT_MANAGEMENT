@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from pydantic import field_validator
 
 from app.core.response import APIResponse
@@ -55,6 +56,17 @@ def validate_exception_handler(_: Request, exc: RequestValidationError):
             statusCode=status.HTTP_422_UNPROCESSABLE_CONTENT,
             message="Có lỗi validate",
             error=format_request_validation_errors(exc),
+        ).model_dump(),
+    )
+
+
+def sqlalchemy_integrity_exception_handler(_: Request, exc: IntegrityError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content=APIResponse(
+            statusCode=status.HTTP_400_BAD_REQUEST,
+            message="Lỗi dữ liệu: Có thể do trùng lặp dữ liệu hoặc vi phạm khóa ngoại (dữ liệu không tồn tại)",
+            error="INTEGRITY_ERROR",
         ).model_dump(),
     )
 

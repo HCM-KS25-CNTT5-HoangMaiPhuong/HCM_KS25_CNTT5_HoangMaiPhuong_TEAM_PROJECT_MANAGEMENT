@@ -5,7 +5,9 @@ from app.core.exception import (
     app_exception_handler,
     internal_exception_handler,
     validate_exception_handler,
+    sqlalchemy_integrity_exception_handler,
 )
+from sqlalchemy.exc import IntegrityError
 from app.core.response import APIResponse
 from app.models import Base
 from app.db.database import engine
@@ -17,6 +19,7 @@ Base.metadata.create_all(bind=engine)
 
 app.add_exception_handler(AppException, app_exception_handler)  # type: ignore
 app.add_exception_handler(RequestValidationError, validate_exception_handler)  # type: ignore
+app.add_exception_handler(IntegrityError, sqlalchemy_integrity_exception_handler)# type: ignore
 app.add_exception_handler(Exception, internal_exception_handler)
 
 app.include_router(auth.router)

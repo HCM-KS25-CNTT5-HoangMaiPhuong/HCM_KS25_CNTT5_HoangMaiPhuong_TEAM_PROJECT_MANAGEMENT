@@ -14,6 +14,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
     "/register",
     response_model=APIResponse[UserResponse],
     status_code=status.HTTP_201_CREATED,
+    summary="Đăng ký tài khoản",
+    description="Tạo một tài khoản người dùng mới trong hệ thống bằng email và mật khẩu.",
 )
 def register(body: UserCreate, db: Session = Depends(get_db)):
     user = auth_service.register(body, db)
@@ -26,7 +28,11 @@ def register(body: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post(
-    "/login", response_model=APIResponse[TokenResponse], status_code=status.HTTP_200_OK
+    "/login", 
+    response_model=APIResponse[TokenResponse], 
+    status_code=status.HTTP_200_OK,
+    summary="Đăng nhập",
+    description="Đăng nhập vào hệ thống để lấy Access Token và Refresh Token.",
 )
 def login(body: UserLogin, db: Session = Depends(get_db)):
     token = auth_service.login(body, db)

@@ -1,7 +1,11 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.exception import BadRequestException, NotFoundException, ForbiddenException
+from app.core.exception import (
+    BadRequestException,
+    NotFoundException,
+    ForbiddenException,
+)
 from app.db.database import get_db
 from app.models.project import Project
 from app.models.project_member import ProjectMember, ProjectMemberRole
@@ -42,47 +46,25 @@ def get_projects(user_id: int, db: Session, name: str | None = None):
     return projects
 
 
-def get_project_by_id(user_id: int, project_id: int, db: Session):
-    stmt = (
-        select(Project)
-        .join(
-            ProjectMember,
-            (ProjectMember.project_id == Project.id)
-            & (ProjectMember.user_id == user_id),
-        )
-        .where(Project.id == project_id)
-    )
-    project = db.scalar(stmt)
-    if not project:
-        raise NotFoundException(message="Không tìm thấy Project")
-
-    return project
-
-
-def update_project(project_id: int, body: ProjectUpdate, db: Session):
-    project = db.scalar(select(Project).where(Project.id == project_id))
-    if not project:
-        raise NotFoundException("Project không tồn tại")
+def update_project(project: Project, body: ProjectUpdate, db: Session):
     update_data = body.model_dump(exclude_unset=True)
     if not update_data:
-        raise BadRequestException("Cần it nhất 1 trường để update")
+        raise BadRequestException("Cần ít nhất 1 trường để update")
     for key, value in update_data.items():
         setattr(project, key, value)
     db.commit()
+    db.refresh(project)
     return project
 
 
-def delete_project(project_id: int, db: Session):
-    project = db.scalar(select(Project).where(Project.id == project_id))
-    if not project:
-        raise NotFoundException("Project không tồn tại")
+def delete_project(project: Project, db: Session):
     db.delete(project)
     db.commit()
     return project
 
 
 def add_project_member(project_id: int, member_id: int, db: Session):
-    member = db.scalar(select(User).where(User.id == member_id))
+    member = db.scalar(select(User).where(User.id == member_id, User.is_active == True))
     if not member:
         raise BadRequestException("Nguời dùng không tồn tại")
     member_exists = db.scalar(
@@ -116,17 +98,9 @@ def delete_project_member(project_id: int, member_id: int, db: Session):
     db.commit()
 
 
-def list_member(user_id: int, project_id: int, db: Session):
-    is_member = db.scalar(
-        select(ProjectMember).where(
-            ProjectMember.project_id == project_id, ProjectMember.user_id == user_id
-        )
-    )
-    if not is_member:
-        raise ForbiddenException(message="Bạn không có quyền xem danh sách thành viên của project này.")
-
+def list_member(project_id: int, db: Session):
     members = db.scalars(
         select(ProjectMember).where(ProjectMember.project_id == project_id)
     )
-    
+
     return members

@@ -25,7 +25,10 @@ class Project(Base):
         nullable=False,
         server_default=func.current_timestamp(),
     )
-
     owner: Mapped[User] = relationship("User", back_populates="owned_projects")
-    members: Mapped[list[ProjectMember]] = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
-    tasks: Mapped[list[Task]] = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    members: Mapped[list[ProjectMember]] = relationship(
+        "ProjectMember", back_populates="project", cascade="all, delete-orphan"
+    )
+    tasks: Mapped[list[Task]] = relationship(
+        "Task", back_populates="project", cascade="all, delete-orphan"
+    )

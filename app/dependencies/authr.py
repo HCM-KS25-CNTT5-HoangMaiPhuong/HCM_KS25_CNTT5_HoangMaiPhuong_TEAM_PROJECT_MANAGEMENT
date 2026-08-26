@@ -8,6 +8,7 @@ from app.core.exception import ForbiddenException, NotFoundException
 from app.db.database import get_db
 from app.dependencies.authn import get_current_user, get_token_claims
 from app.models.project_member import ProjectMember, ProjectMemberRole
+from app.models.project import Project
 from app.models.user import User
 
 
@@ -28,18 +29,26 @@ def require_owner(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    member = db.scalar(
-        select(ProjectMember).where(
-            ProjectMember.project_id == project_id,
-            ProjectMember.user_id == current_user.id,
-            ProjectMember.role == ProjectMemberRole.OWNER.value,
+    stmt = (
+        select(Project, ProjectMember)
+        .outerjoin(
+            ProjectMember,
+            (ProjectMember.project_id == Project.id)
+            & (ProjectMember.user_id == current_user.id),
         )
+        .where(Project.id == project_id)
     )
+    result = db.execute(stmt).first()
 
-    if not member:
+    if not result:
+        raise NotFoundException("Project không tồn tại")
+        
+    project, member = result
+
+    if not member or member.role != ProjectMemberRole.OWNER.value:
         raise ForbiddenException("Bạn không có quyền thực hiện thao tác này")
 
-    return current_user
+    return project
 
 
 def require_member(
@@ -47,14 +56,23 @@ def require_member(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    member = db.scalar(
-        select(ProjectMember).where(
-            ProjectMember.project_id == project_id,
-            ProjectMember.user_id == current_user.id,
+    stmt = (
+        select(Project, ProjectMember)
+        .outerjoin(
+            ProjectMember,
+            (ProjectMember.project_id == Project.id)
+            & (ProjectMember.user_id == current_user.id),
         )
+        .where(Project.id == project_id)
     )
+    result = db.execute(stmt).first()
+
+    if not result:
+        raise NotFoundException("Project không tồn tại")
+        
+    project, member = result
 
     if not member:
-        raise NotFoundException(message="Không tìm thấy project")
+        raise ForbiddenException("Bạn không có quyền thực hiện thao tác này")
 
-    return current_user
+    return project

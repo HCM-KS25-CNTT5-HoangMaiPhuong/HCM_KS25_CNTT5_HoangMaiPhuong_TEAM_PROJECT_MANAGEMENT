@@ -13,7 +13,11 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get(
-    "/me", response_model=APIResponse[UserResponse], status_code=status.HTTP_200_OK
+    "/me", 
+    response_model=APIResponse[UserResponse], 
+    status_code=status.HTTP_200_OK,
+    summary="Lấy thông tin cá nhân",
+    description="Lấy thông tin profile của người dùng đang đăng nhập dựa trên Access Token.",
 )
 def get_me(current_user: User = Depends(get_current_user)):
     return APIResponse(
@@ -24,7 +28,11 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.get(
-    "", response_model=APIResponse[list[UserResponse]], status_code=status.HTTP_200_OK
+    "", 
+    response_model=APIResponse[list[UserResponse]], 
+    status_code=status.HTTP_200_OK,
+    summary="Lấy danh sách người dùng",
+    description="Admin lấy danh sách người dùng trong hệ thống. Hỗ trợ tìm kiếm theo từ khóa (email, tên) và trạng thái kích hoạt.",
 )
 def list_users(
     keyword: str | None = None,
